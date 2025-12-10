@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_donors }}</h3>
+                        <p>Total Donors</p>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_recipients }}</h3>
+                        <p>Total Recipients</p>
+                    </div>
+                    <i class="fas fa-user-injured fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_blood_units }}</h3>
+                        <p>Blood Units Available</p>
+                    </div>
+                    <i class="fas fa-tint fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.pending_requests }}</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.scheduled_appointments }}</h3>
+                        <p>Scheduled Appointments</p>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.completed_appointments }}</h3>
+                        <p>Completed Appointments</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Section -->
+    {% if unread_notifications %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-bell me-2"></i>Recent Notifications 
+                        <span class="badge bg-danger ms-2">{{ stats.unread_notifications }}</span>
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('admin_notifications') }}" class="btn btn-sm btn-outline-primary me-2">View All</a>
+                        <button class="btn btn-sm btn-outline-success" onclick="markAllAsRead()">Mark All Read</button>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for notification in unread_notifications %}
+                    <div class="list-group-item d-flex justify-content-between align-items-start {% if not notification.is_read %}unread{% endif %}">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">{{ notification.title }}</div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-{{ 'info' if notification.notification_type == 'info' else 'warning' if notification.notification_type == 'warning' else 'success' if notification.notification_type == 'success' else 'danger' }} rounded-pill">
+                                {{ notification.notification_type.title() }}
+                            </span>
+                            {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="markAsRead({{ notification.id }})" title="Mark as Read">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Recent Blood Requests -->
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-list me-2"></i>Recent Blood Requests</h5>
+                    <a href="{{ url_for('admin_requests') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Blood Group</th>
+                                <th>Units</th>
+                                <th>Urgency</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in recent_requests %}
+                            <tr>
+                                <td>#{{ request.id }}</td>
+                                <td><span class="blood-group-badge bg-{{ request.blood_group.replace('+', 'p').replace('-', 'n') }}">{{ request.blood_group }}</span></td>
+                                <td>{{ request.units_needed }}</td>
+                                <td><span class="urgency-badge urgency-{{ request.urgency_level }}">{{ request.urgency_level.title() }}</span></td>
+                                <td><span class="status-badge status-{{ request.status }}">{{ request.status.title() }}</span></td>
+                                <td>{{ request.request_date.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Appointments -->
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-calendar-alt me-2"></i>Recent Appointments</h5>
+                    <a href="{{ url_for('admin_appointments') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Appointment ID</th>
+                                <th>Donor</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in recent_appointments %}
+                            <tr>
+                                <td>#{{ appointment.id }}</td>
+                                <td>
+                                    {% set donor = appointment.donor %}
+                                    {{ donor.full_name or donor.username if donor else 'Unknown' }}
+                                </td>
+                                <td>{{ appointment.appointment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td><span class="status-badge status-{{ appointment.status }}">{{ appointment.status.title() }}</span></td>
+                                <td>
+                                    {% if appointment.status == 'scheduled' %}
+                                    <button class="btn btn-sm btn-success" onclick="completeAppointment({{ appointment.id }})" title="Mark as Complete">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="cancelAppointment({{ appointment.id }})" title="Cancel">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Blood Stock Overview -->
+        <div class="col-md-12 mb-4">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-chart-pie me-2"></i>Blood Stock Overview</h5>
+                <div class="row">
+                    {% for stock in blood_stock %}
+                    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-3">
+                        <div class="text-center">
+                            <div class="blood-group-badge bg-{{ stock.blood_group.replace('+', 'p').replace('-', 'n') }} mb-2">{{ stock.blood_group }}</div>
+                            <div class="badge bg-{{ 'success' if stock.units_available > 10 else 'warning' if stock.units_available > 5 else 'danger' }} fs-6">
+                                {{ stock.units_available }} Units
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('admin_blood_stock') }}" class="btn btn-sm btn-primary">Manage Stock</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="row g-3">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_donors') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-users me-2"></i>Manage Donors
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_blood_stock') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-tint me-2"></i>Blood Stock
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_requests') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-list me-2"></i>Blood Requests
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_appointments') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-calendar-alt me-2"></i>Appointments
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_camps') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-hospital me-2"></i>Donation Camps
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_notifications') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-bell me-2"></i>Notifications
+                            {% if stats.unread_notifications > 0 %}
+                            <span class="badge bg-danger ms-1">{{ stats.unread_notifications }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-dark w-100">
+                            <i class="fas fa-file-alt me-2"></i>Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function completeAppointment(appointmentId) {
+    if (!confirm('Mark this appointment as completed?')) return;
+    
+    fetch(`/admin/appointments/${appointmentId}/complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to complete appointment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to complete appointment');
+    });
+}
+
+function cancelAppointment(appointmentId) {
+    if (!confirm('Cancel this appointment?')) return;
+    
+    fetch(`/admin/appointments/${appointmentId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to cancel appointment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to cancel appointment');
+    });
+}
+
+function markAsRead(notificationId) {
+    fetch(`/admin/notifications/${notificationId}/mark-read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to mark notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to mark notification as read');
+    });
+}
+
+function markAllAsRead() {
+    if (!confirm('Mark all notifications as read?')) return;
+    
+    fetch('/admin/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to mark all notifications as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to mark all notifications as read');
+    });
+}
+</script>
+{% endblock %}

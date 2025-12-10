@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Recipient Dashboard - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-user-injured me-2"></i>Welcome, {{ current_user.username }}!</h2>
+        </div>
+    </div>
+
+    <!-- Recipient Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ my_requests|length }}</h3>
+                        <p>Total Requests</p>
+                    </div>
+                    <i class="fas fa-list fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ my_requests|selectattr('status', 'equalto', 'approved')|list|length }}</h3>
+                        <p>Approved Requests</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ available_blood|length }}</h3>
+                        <p>Blood Types Available</p>
+                    </div>
+                    <i class="fas fa-tint fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- My Blood Requests -->
+        <div class="col-md-8 mb-4">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-list me-2"></i>My Blood Requests</h5>
+                    <a href="{{ url_for('request_blood') }}" class="btn btn-sm btn-primary">New Request</a>
+                </div>
+                {% if my_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Blood Group</th>
+                                <th>Units</th>
+                                <th>Urgency</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in my_requests %}
+                            <tr>
+                                <td>#{{ request.id }}</td>
+                                <td><span class="blood-group-badge bg-{{ request.blood_group.replace('+', 'p').replace('-', 'n') }}">{{ request.blood_group }}</span></td>
+                                <td>{{ request.units_needed }}</td>
+                                <td><span class="urgency-badge urgency-{{ request.urgency_level }}">{{ request.urgency_level.title() }}</span></td>
+                                <td><span class="status-badge status-{{ request.status }}">{{ request.status.title() }}</span></td>
+                                <td>{{ request.request_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                    <button class="btn btn-sm btn-outline-danger" onclick="cancelRequest({{ request.id }})">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-list fa-3x mb-3"></i>
+                    <p>No blood requests yet</p>
+                    <a href="{{ url_for('request_blood') }}" class="btn btn-primary">Make Your First Request</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Blood Availability -->
+        <div class="col-md-4 mb-4">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-tint me-2"></i>Blood Availability</h5>
+                <div class="row">
+                    {% for blood in available_blood %}
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <div class="blood-group-badge bg-{{ blood.blood_group.replace('+', 'p').replace('-', 'n') }} mb-2">{{ blood.blood_group }}</div>
+                            <div class="badge bg-{{ 'success' if blood.units_available > 10 else 'warning' if blood.units_available > 5 else 'danger' }} fs-6">
+                                {{ blood.units_available }} Units
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('search_blood') }}" class="btn btn-sm btn-primary">Search Blood</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contact -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-phone me-2"></i>Emergency Contact</h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Emergency Blood Request:</strong> Call +91-9315490892 for immediate assistance with urgent blood requirements.
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-danger btn-lg" onclick="makeEmergencyCall()">
+                            <i class="fas fa-phone me-2"></i>Emergency Call
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="row g-3">
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{{ url_for('request_blood') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-plus-circle me-2"></i>Request Blood
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="{{ url_for('search_blood') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-search me-2"></i>Search Blood
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <button class="btn btn-outline-warning w-100" onclick="checkCompatibility()">
+                            <i class="fas fa-heart me-2"></i>Check Compatibility
+                        </button>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <button class="btn btn-outline-info w-100" onclick="viewGuidelines()">
+                            <i class="fas fa-info-circle me-2"></i>Guidelines
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function cancelRequest(requestId) {
+    if (!confirm('Are you sure you want to cancel this blood request?')) return;
+    fetch(`{{ url_for('cancel_my_request', request_id=0) }}`.replace('0', requestId), {
+        method: 'POST'
+    }).then(r => r.json()).then(res => {
+        if (res.success) {
+            window.location.reload();
+        } else {
+            alert(res.message || 'Failed to cancel request');
+        }
+    }).catch(() => alert('Failed to cancel request'));
+}
+
+function makeEmergencyCall() {
+    if (!confirm('This will initiate an emergency blood request. Are you sure?')) return;
+    const bloodGroup = prompt('Enter blood group (e.g., A+, O-, AB+):');
+    if (!bloodGroup) return;
+    const units = prompt('Enter units needed:', '1');
+    fetch('{{ url_for('recipient_emergency_request') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blood_group: bloodGroup.trim(), units_needed: units || 1 })
+    }).then(r => r.json()).then(res => {
+        if (res.success) {
+            alert('Emergency request created successfully!');
+            window.location.reload();
+        } else {
+            alert(res.message || 'Failed to create emergency request');
+        }
+    }).catch(() => alert('Failed to create emergency request'));
+}
+
+function checkCompatibility() {
+    const group = prompt('Enter your blood group (A+, A-, B+, B-, AB+, AB-, O+, O-):');
+    if (!group) return;
+    const bg = group.trim().toUpperCase();
+    const receivesFrom = {
+        'A+': ['A+', 'A-', 'O+', 'O-'],
+        'A-': ['A-', 'O-'],
+        'B+': ['B+', 'B-', 'O+', 'O-'],
+        'B-': ['B-', 'O-'],
+        'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+        'AB-': ['A-', 'B-', 'AB-', 'O-'],
+        'O+': ['O+', 'O-'],
+        'O-': ['O-']
+    };
+    const donatesTo = {
+        'A+': ['A+', 'AB+'],
+        'A-': ['A-', 'A+', 'AB-', 'AB+'],
+        'B+': ['B+', 'AB+'],
+        'B-': ['B-', 'B+', 'AB-', 'AB+'],
+        'AB+': ['AB+'],
+        'AB-': ['AB-', 'AB+'],
+        'O+': ['O+', 'A+', 'B+', 'AB+'],
+        'O-': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+    };
+    if (!receivesFrom[bg]) {
+        alert('Invalid blood group entered.');
+        return;
+    }
+    const recv = receivesFrom[bg];
+    const donate = donatesTo[bg] || [];
+
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Can Receive From</h6>
+                <div>${recv.map(g => `<span class=\"blood-group-badge bg-${g.replace('+','p').replace('-','n')} me-1 mb-1 d-inline-block\">${g}</span>`).join(' ')}</div>
+            </div>
+            <div class="col-md-6">
+                <h6>Can Donate To</h6>
+                <div>${donate.map(g => `<span class=\"blood-group-badge bg-${g.replace('+','p').replace('-','n')} me-1 mb-1 d-inline-block\">${g}</span>`).join(' ')}</div>
+            </div>
+        </div>
+    `;
+    const body = document.getElementById('compatibilityBody');
+    body.innerHTML = html;
+    document.getElementById('compatibilityTitle').textContent = `Compatibility for ${bg}`;
+    new bootstrap.Modal(document.getElementById('compatibilityModal')).show();
+}
+
+function viewGuidelines() {
+    const body = document.getElementById('guidelinesBody');
+    body.innerHTML = `
+        <h6>Before You Request</h6>
+        <ul>
+            <li>Verify patient identity and hospital details.</li>
+            <li>Confirm the required blood group and number of units.</li>
+            <li>Mark urgency appropriately (Emergency, High, Medium, Low).</li>
+        </ul>
+        <h6>During the Process</h6>
+        <ul>
+            <li>Keep a reachable contact phone active.</li>
+            <li>Coordinate with the hospital blood bank for timing.</li>
+            <li>Carry necessary documents (doctor’s note, patient ID).</li>
+        </ul>
+        <h6>After Fulfillment</h6>
+        <ul>
+            <li>Update request status if fulfilled or no longer needed.</li>
+            <li>Report any adverse events to the hospital.</li>
+        </ul>
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            In emergencies, also use the Emergency Call option to fast-track the request.
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('guidelinesModal')).show();
+}
+</script>
+<!-- Guidelines Modal -->
+<div class="modal fade" id="guidelinesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Blood Request Guidelines</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="guidelinesBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+    </div>
+<!-- Compatibility Modal -->
+<div class="modal fade" id="compatibilityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="compatibilityTitle">Blood Compatibility</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="compatibilityBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}

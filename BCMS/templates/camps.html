@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Donation Camps{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Donation Camps</h2>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="campSearch" placeholder="Search camps by name or location...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header"><strong>Upcoming & Ongoing</strong></div>
+                <div class="card-body">
+                    {% if upcoming_camps %}
+                    <div class="list-group" id="upcomingList">
+                        {% for c in upcoming_camps %}
+                        <a class="list-group-item list-group-item-action camp-item" data-name="{{ c.camp_name|lower }}" data-location="{{ c.location|lower }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ c.camp_name }}</h5>
+                                <small class="text-muted">
+                                    {{ c.start_date.strftime('%Y-%m-%d %H:%M') }} - {{ c.end_date.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                            <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ c.location }}</p>
+                            <small>
+                                <span class="badge bg-secondary me-2">Expected: {{ c.expected_donors }}</span>
+                                <span class="badge bg-info text-dark me-2">Organizer: {{ c.organizer or 'N/A' }}</span>
+                                <span class="badge bg-{{ 'success' if c.status=='ongoing' else 'warning' if c.status=='scheduled' else 'secondary' }}">{{ c.status.title() }}</span>
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No upcoming camps.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header"><strong>Recently Completed</strong></div>
+                <div class="card-body">
+                    {% if past_camps %}
+                    <ul class="list-group" id="pastList">
+                        {% for c in past_camps %}
+                        <li class="list-group-item camp-item" data-name="{{ c.camp_name|lower }}" data-location="{{ c.location|lower }}">
+                            <div class="fw-bold">{{ c.camp_name }}</div>
+                            <small class="text-muted">{{ c.end_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            <div class="small"><i class="fas fa-map-marker-alt me-1"></i>{{ c.location }}</div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-muted">No past camps.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('campSearch').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    document.querySelectorAll('.camp-item').forEach(el => {
+        const name = el.getAttribute('data-name') || '';
+        const loc = el.getAttribute('data-location') || '';
+        el.style.display = (name.includes(q) || loc.includes(q)) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
+
+

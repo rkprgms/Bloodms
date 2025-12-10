@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-bell me-2"></i>Notifications</h2>
+        </div>
+    </div>
+
+    <!-- Notification Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ notifications|selectattr('is_read', 'equalto', false)|list|length }}</h3>
+                        <p>Unread Notifications</p>
+                    </div>
+                    <i class="fas fa-bell fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ notifications|selectattr('is_read', 'equalto', true)|list|length }}</h3>
+                        <p>Read Notifications</p>
+                    </div>
+                    <i class="fas fa-bell-slash fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ notifications|selectattr('notification_type', 'equalto', 'info')|list|length }}</h3>
+                        <p>Info Notifications</p>
+                    </div>
+                    <i class="fas fa-info-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ notifications|selectattr('notification_type', 'equalto', 'warning')|list|length }}</h3>
+                        <p>Warning Notifications</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-list me-2"></i>All Notifications</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterNotifications('all')">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="filterNotifications('unread')">Unread</button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="filterNotifications('read')">Read</button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="filterNotifications('info')">Info</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="filterNotifications('warning')">Warning</button>
+                    </div>
+                </div>
+                
+                <div class="list-group list-group-flush" id="notificationsList">
+                    {% for notification in notifications %}
+                    <div class="list-group-item d-flex justify-content-between align-items-start notification-item {% if not notification.is_read %}unread{% endif %}" 
+                         data-status="{% if notification.is_read %}read{% else %}unread{% endif %}" 
+                         data-type="{{ notification.notification_type }}">
+                        <div class="ms-2 me-auto">
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-1 {% if not notification.is_read %}fw-bold{% endif %}">{{ notification.title }}</h6>
+                                {% if not notification.is_read %}
+                                <span class="badge bg-danger ms-2">New</span>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{{ 'info' if notification.notification_type == 'info' else 'warning' if notification.notification_type == 'warning' else 'success' if notification.notification_type == 'success' else 'danger' }} rounded-pill me-2">
+                                {{ notification.notification_type.title() }}
+                            </span>
+                            {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-outline-primary" onclick="markAsRead({{ notification.id }})" title="Mark as Read">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% else %}
+                            <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if not notifications %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                    <h5>No notifications found</h5>
+                    <p>You don't have any notifications yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    {% if notifications %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <h5><i class="fas fa-tasks me-2"></i>Bulk Actions</h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double me-2"></i>Mark All as Read
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="clearAllNotifications()">
+                        <i class="fas fa-trash me-2"></i>Clear All Notifications
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterNotifications(filter) {
+    const notifications = document.querySelectorAll('.notification-item');
+    
+    notifications.forEach(notification => {
+        const status = notification.dataset.status;
+        const type = notification.dataset.type;
+        
+        let show = false;
+        
+        switch(filter) {
+            case 'all':
+                show = true;
+                break;
+            case 'unread':
+                show = status === 'unread';
+                break;
+            case 'read':
+                show = status === 'read';
+                break;
+            case 'info':
+                show = type === 'info';
+                break;
+            case 'warning':
+                show = type === 'warning';
+                break;
+        }
+        
+        notification.style.display = show ? '' : 'none';
+    });
+    
+    // Update button states
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function markAsRead(notificationId) {
+    fetch(`/admin/notifications/${notificationId}/mark-read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to mark notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to mark notification as read');
+    });
+}
+
+function markAllAsRead() {
+    if (!confirm('Mark all notifications as read?')) return;
+    
+    fetch('/admin/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to mark all notifications as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to mark all notifications as read');
+    });
+}
+
+function clearAllNotifications() {
+    if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) return;
+    
+    // This would typically make an API call to delete all notifications
+    alert('Clear all notifications feature will be implemented soon!');
+}
+
+// Initialize with 'all' filter active
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.btn-group button').classList.add('active');
+});
+</script>
+{% endblock %}

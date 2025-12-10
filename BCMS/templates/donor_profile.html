@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Profile - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-user me-2"></i>Donor Profile</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Profile Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ current_user.full_name or '' }}" required>
+                                <div class="invalid-feedback">
+                                    Please provide your full name.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ current_user.phone or '' }}" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid phone number.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="blood_group" class="form-label">Blood Group *</label>
+                                <select class="form-select" id="blood_group" name="blood_group" required>
+                                    <option value="">Select Blood Group</option>
+                                    <option value="A+" {{ 'selected' if current_user.blood_group == 'A+' else '' }}>A+</option>
+                                    <option value="A-" {{ 'selected' if current_user.blood_group == 'A-' else '' }}>A-</option>
+                                    <option value="B+" {{ 'selected' if current_user.blood_group == 'B+' else '' }}>B+</option>
+                                    <option value="B-" {{ 'selected' if current_user.blood_group == 'B-' else '' }}>B-</option>
+                                    <option value="AB+" {{ 'selected' if current_user.blood_group == 'AB+' else '' }}>AB+</option>
+                                    <option value="AB-" {{ 'selected' if current_user.blood_group == 'AB-' else '' }}>AB-</option>
+                                    <option value="O+" {{ 'selected' if current_user.blood_group == 'O+' else '' }}>O+</option>
+                                    <option value="O-" {{ 'selected' if current_user.blood_group == 'O-' else '' }}>O-</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select your blood group.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label">Age *</label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       value="{{ current_user.age or '' }}" min="18" max="65" required>
+                                <div class="invalid-feedback">
+                                    Please provide your age (18-65 years).
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="weight" class="form-label">Weight (kg) *</label>
+                                <input type="number" class="form-control" id="weight" name="weight" 
+                                       value="{{ current_user.weight or '' }}" min="50" step="0.1" required>
+                                <div class="invalid-feedback">
+                                    Please provide your weight (minimum 50 kg).
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_donation" class="form-label">Last Donation Date</label>
+                                <input type="date" class="form-control" id="last_donation" name="last_donation" 
+                                       value="{{ current_user.last_donation.strftime('%Y-%m-%d') if current_user.last_donation else '' }}">
+                                <div class="form-text">Leave empty if you haven't donated before</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address *</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required>{{ current_user.address or '' }}</textarea>
+                            <div class="invalid-feedback">
+                                Please provide your address.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="medical_history" class="form-label">Medical History</label>
+                            <textarea class="form-control" id="medical_history" name="medical_history" rows="4" 
+                                      placeholder="Please mention any medical conditions, medications, or health issues...">{{ current_user.medical_history or '' }}</textarea>
+                            <div class="form-text">This information helps us ensure your safety during donation</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Summary & Eligibility -->
+        <div class="col-md-4">
+            <!-- Profile Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="avatar-circle mx-auto mb-3">
+                            {{ current_user.full_name[0] if current_user.full_name else current_user.username[0] }}
+                        </div>
+                        <h5>{{ current_user.full_name or current_user.username }}</h5>
+                        <p class="text-muted">@{{ current_user.username }}</p>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-primary">{{ current_user.blood_group or 'Not Set' }}</h6>
+                                <small class="text-muted">Blood Group</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-success">{{ current_user.age or 'Not Set' }}</h6>
+                            <small class="text-muted">Age</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eligibility Check -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Eligibility Status</h5>
+                </div>
+                <div class="card-body">
+                    <div id="eligibilityStatus">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Complete your profile to check eligibility.
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Eligibility Criteria:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>Age: 18-65 years</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Weight: Minimum 50 kg</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Last donation: 56+ days ago</li>
+                            <li><i class="fas fa-check text-success me-2"></i>No serious medical conditions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                        </a>
+                        <a href="{{ url_for('search_blood') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Search Blood
+                        </a>
+                        <button class="btn btn-outline-success" onclick="checkEligibility()">
+                            <i class="fas fa-check-circle me-2"></i>Check Eligibility
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkEligibility() {
+    const age = parseInt(document.getElementById('age').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const lastDonation = document.getElementById('last_donation').value;
+    const bloodGroup = document.getElementById('blood_group').value;
+    
+    let eligibility = {
+        eligible: true,
+        reasons: []
+    };
+    
+    // Check age
+    if (!age || age < 18 || age > 65) {
+        eligibility.eligible = false;
+        eligibility.reasons.push('Age must be between 18 and 65 years');
+    }
+    
+    // Check weight
+    if (!weight || weight < 50) {
+        eligibility.eligible = false;
+        eligibility.reasons.push('Weight must be at least 50 kg');
+    }
+    
+    // Check blood group
+    if (!bloodGroup) {
+        eligibility.eligible = false;
+        eligibility.reasons.push('Blood group must be selected');
+    }
+    
+    // Check last donation
+    if (lastDonation) {
+        const lastDonationDate = new Date(lastDonation);
+        const today = new Date();
+        const daysSinceLastDonation = Math.floor((today - lastDonationDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceLastDonation < 56) {
+            eligibility.eligible = false;
+            eligibility.reasons.push('Must wait at least 56 days between donations');
+        }
+    }
+    
+    // Update eligibility status
+    const statusDiv = document.getElementById('eligibilityStatus');
+    if (eligibility.eligible) {
+        statusDiv.innerHTML = `
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>You are eligible to donate blood!</strong>
+            </div>
+        `;
+    } else {
+        statusDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Not eligible:</strong> ${eligibility.reasons.join(', ')}
+            </div>
+        `;
+    }
+}
+
+// Real-time eligibility check on form changes
+document.getElementById('age').addEventListener('input', checkEligibility);
+document.getElementById('weight').addEventListener('input', checkEligibility);
+document.getElementById('blood_group').addEventListener('change', checkEligibility);
+document.getElementById('last_donation').addEventListener('change', checkEligibility);
+
+// Phone number validation
+document.getElementById('phone').addEventListener('input', function() {
+    const phone = this.value;
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    
+    if (phone && !phoneRegex.test(phone)) {
+        this.setCustomValidity('Please enter a valid phone number');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Check eligibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('age').value && document.getElementById('weight').value && document.getElementById('blood_group').value) {
+        checkEligibility();
+    }
+});
+</script>
+
+<style>
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

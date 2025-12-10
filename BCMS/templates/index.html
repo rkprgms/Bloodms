@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Blood Bank Management System - Home{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="fade-in">BloodConnect</h1>
+        <p class="fade-in">Connecting lives through blood donation</p>
+        <div class="fade-in">
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-3">
+                <i class="fas fa-user-plus me-2"></i>Join Us
+            </a>
+            <a href="{{ url_for('search_blood') }}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-search me-2"></i>Find Blood
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="mb-4">Why Choose BloodConnect?</h2>
+            <p class="lead text-muted">A comprehensive platform that makes blood donation and management simple, secure, and efficient.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-heartbeat"></i>
+                <h4>For Donors</h4>
+                <p>Easy registration, appointment booking, and donation tracking. Get notified about eligibility and upcoming donation opportunities.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-user-injured"></i>
+                <h4>For Recipients</h4>
+                <p>Quick blood search, emergency requests, and real-time availability updates. Find the blood you need when you need it most.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <i class="fas fa-cogs"></i>
+                <h4>For Administrators</h4>
+                <p>Complete blood bank management with inventory tracking, request management, and comprehensive reporting tools.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h5>Secure & Private</h5>
+                    <p>Your personal information is protected with industry-standard security measures. We respect your privacy and maintain strict confidentiality.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                    <h5>Mobile Friendly</h5>
+                    <p>Access our platform from any device. Our responsive design ensures a seamless experience on desktop, tablet, or mobile.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Current Blood Availability</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="bloodAvailability">
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 text-center">
+            <h3 class="mb-4">Ready to Make a Difference?</h3>
+            <p class="lead mb-4">Join thousands of donors and recipients who trust BloodConnect for their blood donation needs.</p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-user-plus me-2"></i>Get Started
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load blood availability on page load
+    fetch('/api/blood-availability')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('bloodAvailability');
+            const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+            
+            container.innerHTML = bloodGroups.map(group => {
+                const units = data[group] || 0;
+                const statusClass = units > 10 ? 'success' : units > 5 ? 'warning' : 'danger';
+                return `
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="text-center">
+                            <div class="blood-group-badge bg-${group.replace('+', 'p').replace('-', 'n')} mb-2">${group}</div>
+                            <div class="badge bg-${statusClass} fs-6">${units} Units</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        })
+        .catch(error => {
+            console.error('Error loading blood availability:', error);
+            document.getElementById('bloodAvailability').innerHTML = '<div class="col-12 text-center text-muted">Unable to load blood availability</div>';
+        });
+});
+</script>
+{% endblock %}

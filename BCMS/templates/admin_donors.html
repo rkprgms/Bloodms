@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Donors - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-users me-2"></i>Manage Donors</h2>
+                <a class="btn btn-primary" href="{{ url_for('admin_add_donor') }}">
+                    <i class="fas fa-plus me-2"></i>Add Donor
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search donors...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="bloodGroupFilter">
+                <option value="">All Blood Groups</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Donors Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Blood Group</th>
+                                    <th>Age</th>
+                                    <th>Last Donation</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donor in donors %}
+                                <tr>
+                                    <td>{{ donor.id }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2">
+                                                {{ donor.full_name[0] if donor.full_name else donor.username[0] }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ donor.full_name or donor.username }}</div>
+                                                <small class="text-muted">@{{ donor.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ donor.email }}</td>
+                                    <td>{{ donor.phone or 'Not provided' }}</td>
+                                    <td>
+                                        {% if donor.blood_group %}
+                                        <span class="blood-group-badge bg-{{ donor.blood_group.replace('+', 'p').replace('-', 'n') }}">{{ donor.blood_group }}</span>
+                                        {% else %}
+                                        <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ donor.age or 'Not provided' }}</td>
+                                    <td>
+                                        {% if donor.last_donation %}
+                                        {{ donor.last_donation.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDonor({{ donor.id }})" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a class="btn btn-sm btn-outline-warning" href="{{ url_for('admin_edit_donor', donor_id=donor.id) }}" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('admin_delete_donor', donor_id=donor.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this donor? This action cannot be undone.')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donor Details Modal -->
+<div class="modal fade" id="donorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Donor Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="donorDetails">
+                <!-- Donor details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="donorEditLink" class="btn btn-primary"><i class="fas fa-edit me-2"></i>Edit</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add handled via link
+
+function viewDonor(donorId) {
+    const detailsEl = document.getElementById('donorDetails');
+    detailsEl.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    fetch(`{{ url_for('admin_donor_details', donor_id=0) }}`.replace('0', donorId))
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('donorEditLink').href = `{{ url_for('admin_edit_donor', donor_id=0) }}`.replace('0', d.id);
+            detailsEl.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Personal Information</h6>
+                        <p><strong>Name:</strong> ${d.full_name || d.username}</p>
+                        <p><strong>Username:</strong> @${d.username}</p>
+                        <p><strong>Email:</strong> ${d.email}</p>
+                        <p><strong>Phone:</strong> ${d.phone || 'Not provided'}</p>
+                        <p><strong>Address:</strong> ${d.address || 'Not provided'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Donor Details</h6>
+                        <p><strong>Blood Group:</strong> ${d.blood_group || 'Not set'}</p>
+                        <p><strong>Age:</strong> ${d.age || 'Not provided'}</p>
+                        <p><strong>Weight:</strong> ${d.weight || 'Not provided'}</p>
+                        <p><strong>Last Donation:</strong> ${d.last_donation || 'Never'}</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Medical History</h6>
+                    <p class="mb-0">${d.medical_history || '<span class="text-muted">No information</span>'}</p>
+                </div>
+            `;
+        })
+        .catch(() => {
+            detailsEl.innerHTML = `<div class="alert alert-danger">Failed to load donor details.</div>`;
+        });
+    new bootstrap.Modal(document.getElementById('donorModal')).show();
+}
+
+// Edit handled via link
+
+// Delete handled via POST form
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const tableRows = document.querySelectorAll('tbody tr');
+    
+    tableRows.forEach(function(row) {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Filter functionality
+document.getElementById('bloodGroupFilter').addEventListener('change', function() {
+    filterTable();
+});
+
+document.getElementById('statusFilter').addEventListener('change', function() {
+    filterTable();
+});
+
+function filterTable() {
+    const bloodGroupFilter = document.getElementById('bloodGroupFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const tableRows = document.querySelectorAll('tbody tr');
+    
+    tableRows.forEach(function(row) {
+        let show = true;
+        
+        if (bloodGroupFilter) {
+            const bloodGroup = row.querySelector('.blood-group-badge')?.textContent;
+            if (bloodGroup !== bloodGroupFilter) {
+                show = false;
+            }
+        }
+        
+        if (statusFilter) {
+            const status = row.querySelector('.badge')?.textContent.toLowerCase();
+            if (status !== statusFilter) {
+                show = false;
+            }
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

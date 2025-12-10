@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Add Donation Camp - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-plus me-2"></i>Add New Donation Camp</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Camp Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="camp_name" class="form-label">Camp Name *</label>
+                                <input type="text" class="form-control" id="camp_name" name="camp_name" required>
+                                <div class="invalid-feedback">
+                                    Please provide a camp name.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="organizer" class="form-label">Organizer</label>
+                                <input type="text" class="form-control" id="organizer" name="organizer">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location *</label>
+                            <textarea class="form-control" id="location" name="location" rows="2" required></textarea>
+                            <div class="invalid-feedback">
+                                Please provide the camp location.
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date & Time *</label>
+                                <input type="datetime-local" class="form-control" id="start_date" name="start_date" required>
+                                <div class="invalid-feedback">
+                                    Please select start date and time.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date & Time *</label>
+                                <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+                                <div class="invalid-feedback">
+                                    Please select end date and time.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_phone" class="form-label">Contact Phone</label>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="expected_donors" class="form-label">Expected Donors</label>
+                                <input type="number" class="form-control" id="expected_donors" name="expected_donors" min="0" value="0">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Camp
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Camp Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Camp Setup Checklist:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-check text-success me-2"></i>Secure venue booking</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Medical equipment ready</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Staff allocation</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Donor registration setup</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Refreshments arranged</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Transportation for blood units</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Safety Requirements:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-shield-alt text-primary me-2"></i>COVID-19 safety protocols</li>
+                        <li><i class="fas fa-shield-alt text-primary me-2"></i>Medical supervision</li>
+                        <li><i class="fas fa-shield-alt text-primary me-2"></i>Emergency medical kit</li>
+                        <li><i class="fas fa-shield-alt text-primary me-2"></i>Proper waste disposal</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    // Set minimum date to today
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    startDateInput.min = tomorrow.toISOString().slice(0, 16);
+    endDateInput.min = tomorrow.toISOString().slice(0, 16);
+    
+    // Set default start time to 9:00 AM
+    const defaultStart = new Date(tomorrow);
+    defaultStart.setHours(9, 0, 0, 0);
+    startDateInput.value = defaultStart.toISOString().slice(0, 16);
+    
+    // Set default end time to 5:00 PM
+    const defaultEnd = new Date(tomorrow);
+    defaultEnd.setHours(17, 0, 0, 0);
+    endDateInput.value = defaultEnd.toISOString().slice(0, 16);
+    
+    // Validate end date is after start date
+    startDateInput.addEventListener('change', function() {
+        endDateInput.min = this.value;
+        if (endDateInput.value && endDateInput.value <= this.value) {
+            const endDate = new Date(this.value);
+            endDate.setHours(endDate.getHours() + 1);
+            endDateInput.value = endDate.toISOString().slice(0, 16);
+        }
+    });
+    
+    endDateInput.addEventListener('change', function() {
+        if (this.value <= startDateInput.value) {
+            this.setCustomValidity('End date must be after start date');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+});
+</script>
+{% endblock %}

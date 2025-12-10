@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Book Donation Appointment - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-calendar-plus me-2"></i>Book Donation Appointment</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Appointment Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Schedule Your Donation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="appointment_date" class="form-label">Preferred Date & Time *</label>
+                                <input type="datetime-local" class="form-control" id="appointment_date" name="appointment_date" required>
+                                <div class="invalid-feedback">
+                                    Please select a valid date and time.
+                                </div>
+                                <div class="form-text">Appointments are available from 9:00 AM to 5:00 PM, Monday to Saturday</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="appointment_type" class="form-label">Donation Type</label>
+                                <select class="form-select" id="appointment_type" name="appointment_type">
+                                    <option value="whole_blood">Whole Blood Donation</option>
+                                    <option value="platelets">Platelet Donation</option>
+                                    <option value="plasma">Plasma Donation</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Any special requirements or notes for the staff..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirm_eligibility" required>
+                                <label class="form-check-label" for="confirm_eligibility">
+                                    I confirm that I meet all eligibility criteria for blood donation
+                                </label>
+                                <div class="invalid-feedback">
+                                    You must confirm your eligibility to proceed.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirm_health" required>
+                                <label class="form-check-label" for="confirm_health">
+                                    I confirm that I am in good health and have not had any recent illnesses
+                                </label>
+                                <div class="invalid-feedback">
+                                    You must confirm your health status to proceed.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-calendar-check me-2"></i>Book Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Guidelines & Info -->
+        <div class="col-md-4">
+            <!-- Eligibility Reminder -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Eligibility Checklist</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Before Your Appointment:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>Age: 18-65 years</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Weight: At least 50 kg</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Last donation: 56+ days ago</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Good health condition</li>
+                            <li><i class="fas fa-check text-success me-2"></i>No recent travel to high-risk areas</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> You will be screened again on the day of donation to ensure eligibility.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preparation Tips -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Preparation Tips</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Before Donation:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-utensils text-primary me-2"></i>Eat a healthy meal</li>
+                        <li><i class="fas fa-tint text-primary me-2"></i>Drink plenty of water</li>
+                        <li><i class="fas fa-bed text-primary me-2"></i>Get adequate sleep</li>
+                        <li><i class="fas fa-ban text-danger me-2"></i>Avoid alcohol 24 hours before</li>
+                        <li><i class="fas fa-smoking-ban text-danger me-2"></i>Don't smoke 2 hours before</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">What to Bring:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-id-card text-info me-2"></i>Valid ID proof</li>
+                        <li><i class="fas fa-file-medical text-info me-2"></i>Medical history (if any)</li>
+                        <li><i class="fas fa-mobile-alt text-info me-2"></i>Emergency contact number</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-phone me-2"></i>Need Help?</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Phone:</strong> +91-9315490892</p>
+                    <p class="mb-2"><strong>Email:</strong> support@bloodconnect.com</p>
+                    <p class="mb-0"><strong>Hours:</strong> 9:00 AM - 5:00 PM (Mon-Sat)</p>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="contactSupport()">
+                            <i class="fas fa-comments me-1"></i>Live Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Chat Modal -->
+<div class="modal fade" id="liveChatModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-comments me-2"></i>Live Chat Support
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="chatBody" class="p-3" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                    <div class="d-flex justify-content-start mb-2">
+                        <div class="bg-light text-dark rounded p-2" style="max-width: 70%;">
+                            <strong>Staff:</strong> Hello! How can we help you with your blood donation appointment today?
+                        </div>
+                    </div>
+                </div>
+                <div class="border-top p-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="chatInput" placeholder="Type your message...">
+                        <button class="btn btn-primary" type="button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const appointmentDateInput = document.getElementById('appointment_date');
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Set minimum date to tomorrow
+    appointmentDateInput.min = tomorrow.toISOString().slice(0, 16);
+    
+    // Set maximum date to 3 months from now
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    appointmentDateInput.max = maxDate.toISOString().slice(0, 16);
+    
+    // Set default time to 10:00 AM
+    const defaultTime = new Date(tomorrow);
+    defaultTime.setHours(10, 0, 0, 0);
+    appointmentDateInput.value = defaultTime.toISOString().slice(0, 16);
+});
+
+function contactSupport() {
+    new bootstrap.Modal(document.getElementById('liveChatModal')).show();
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const chatBody = document.getElementById('chatBody');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'd-flex justify-content-end mb-2';
+    messageDiv.innerHTML = `
+        <div class="bg-primary text-white rounded p-2" style="max-width: 70%;">
+            ${message}
+        </div>
+    `;
+    chatBody.appendChild(messageDiv);
+    input.value = '';
+    chatBody.scrollTop = chatBody.scrollHeight;
+    
+    // Simulate staff response
+    setTimeout(() => {
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'd-flex justify-content-start mb-2';
+        responseDiv.innerHTML = `
+            <div class="bg-light text-dark rounded p-2" style="max-width: 70%;">
+                <strong>Staff:</strong> Thank you for your message. How can we help you with your appointment?
+            </div>
+        `;
+        chatBody.appendChild(responseDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }, 1500);
+}
+
+document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// Form validation
+const form = document.querySelector('.needs-validation');
+form.addEventListener('submit', function(event) {
+    if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    form.classList.add('was-validated');
+});
+
+// Real-time availability check
+document.getElementById('appointment_date').addEventListener('change', function() {
+    const selectedDate = new Date(this.value);
+    const dayOfWeek = selectedDate.getDay();
+    const hour = selectedDate.getHours();
+    
+    // Check if it's a valid day (Monday to Saturday)
+    if (dayOfWeek === 0) { // Sunday
+        this.setCustomValidity('Appointments are not available on Sundays');
+        return;
+    }
+    
+    // Check if it's within business hours (9 AM to 5 PM)
+    if (hour < 9 || hour >= 17) {
+        this.setCustomValidity('Appointments are only available between 9:00 AM and 5:00 PM');
+        return;
+    }
+    
+    this.setCustomValidity('');
+    
+    // Check availability (this would typically make an API call)
+    checkAvailability(selectedDate);
+});
+
+function checkAvailability(date) {
+    // This would check with the server for available time slots
+    // For now, we'll just show a loading message
+    const feedback = document.createElement('div');
+    feedback.className = 'form-text text-info';
+    feedback.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking availability...';
+    
+    // Remove any existing feedback
+    const existingFeedback = document.querySelector('#appointment_date').parentNode.querySelector('.form-text');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+    
+    document.getElementById('appointment_date').parentNode.appendChild(feedback);
+    
+    // Simulate availability check
+    setTimeout(() => {
+        feedback.innerHTML = '<i class="fas fa-check text-success me-1"></i>Time slot available!';
+        setTimeout(() => {
+            feedback.remove();
+        }, 3000);
+    }, 1000);
+}
+</script>
+{% endblock %}

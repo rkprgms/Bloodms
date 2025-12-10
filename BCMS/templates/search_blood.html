@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Search Blood - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-search me-2"></i>Search Blood Availability</h2>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="blood_group" class="form-label">Blood Group</label>
+                            <select class="form-select" id="blood_group" name="blood_group">
+                                <option value="">All Blood Groups</option>
+                                <option value="A+" {{ 'selected' if blood_group == 'A+' else '' }}>A+</option>
+                                <option value="A-" {{ 'selected' if blood_group == 'A-' else '' }}>A-</option>
+                                <option value="B+" {{ 'selected' if blood_group == 'B+' else '' }}>B+</option>
+                                <option value="B-" {{ 'selected' if blood_group == 'B-' else '' }}>B-</option>
+                                <option value="AB+" {{ 'selected' if blood_group == 'AB+' else '' }}>AB+</option>
+                                <option value="AB-" {{ 'selected' if blood_group == 'AB-' else '' }}>AB-</option>
+                                <option value="O+" {{ 'selected' if blood_group == 'O+' else '' }}>O+</option>
+                                <option value="O-" {{ 'selected' if blood_group == 'O-' else '' }}>O-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   value="{{ location or '' }}" placeholder="City, State">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="urgency" class="form-label">Urgency Level</label>
+                            <select class="form-select" id="urgency" name="urgency">
+                                <option value="">Any Urgency</option>
+                                <option value="emergency">Emergency</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Search Blood
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Availability Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Blood Availability Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="bloodOverview">
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Available Blood Units</h5>
+                        <div class="btn-group">
+                            <a class="btn btn-sm btn-outline-primary" id="exportBtn">
+                                <i class="fas fa-download me-1"></i>Export
+                            </a>
+                            <button class="btn btn-sm btn-outline-success" onclick="requestBlood()">
+                                <i class="fas fa-plus me-1"></i>Request Blood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if available_blood %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Blood Group</th>
+                                    <th>Units Available</th>
+                                    <th>Collection Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Days to Expiry</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for blood in available_blood %}
+                                {% set days_to_expiry = ((blood.expiry_date.date() if blood.expiry_date else today) - today).days if blood.expiry_date else 0 %}
+                                <tr class="{{ 'table-warning' if days_to_expiry < 7 and days_to_expiry > 0 else 'table-danger' if days_to_expiry <= 0 else '' }}">
+                                    <td>
+                                        <span class="blood-group-badge bg-{{ blood.blood_group.replace('+', 'p').replace('-', 'n') }}">{{ blood.blood_group }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if blood.units_available > 10 else 'warning' if blood.units_available > 5 else 'danger' }} fs-6">
+                                            {{ blood.units_available }} Units
+                                        </span>
+                                    </td>
+                                    <td>{{ blood.collection_date.strftime('%Y-%m-%d') if blood.collection_date else 'N/A' }}</td>
+                                    <td>{{ blood.expiry_date.strftime('%Y-%m-%d') if blood.expiry_date else 'N/A' }}</td>
+                                    <td>
+                                        {% if blood.expiry_date %}
+                                            {% if days_to_expiry > 0 %}
+                                                <span class="text-{{ 'success' if days_to_expiry > 30 else 'warning' if days_to_expiry > 7 else 'danger' }}">
+                                                    {{ days_to_expiry }} days
+                                                </span>
+                                            {% else %}
+                                                <span class="text-danger">Expired</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ blood.status }}">{{ blood.status.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails({{ blood.id }})" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="requestSpecificBlood('{{ blood.blood_group }}', {{ blood.units_available }})" title="Request This Blood">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No blood units found</h5>
+                        <p class="text-muted">Try adjusting your search criteria or contact us for assistance.</p>
+                        <button class="btn btn-primary" onclick="requestBlood()">
+                            <i class="fas fa-plus me-2"></i>Request Blood
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="bloodDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Blood Unit Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detailsBody">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Group Compatibility Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Blood Group Compatibility</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Blood Group Compatibility Chart</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient Blood Group</th>
+                                            <th>Can Receive From</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>A+</td><td>A+, A-, O+, O-</td></tr>
+                                        <tr><td>A-</td><td>A-, O-</td></tr>
+                                        <tr><td>B+</td><td>B+, B-, O+, O-</td></tr>
+                                        <tr><td>B-</td><td>B-, O-</td></tr>
+                                        <tr><td>AB+</td><td>A+, A-, B+, B-, AB+, AB-, O+, O-</td></tr>
+                                        <tr><td>AB-</td><td>A-, B-, AB-, O-</td></tr>
+                                        <tr><td>O+</td><td>O+, O-</td></tr>
+                                        <tr><td>O-</td><td>O-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Universal Donors & Recipients</h6>
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Universal Donor</h6>
+                                <p class="mb-0"><strong>O-</strong> blood can be given to patients of any blood group.</p>
+                            </div>
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-heart me-2"></i>Universal Recipient</h6>
+                                <p class="mb-0"><strong>AB+</strong> patients can receive blood from any blood group.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadBloodOverview();
+});
+
+function loadBloodOverview() {
+    fetch('/api/blood-availability')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('bloodOverview');
+            const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+            
+            container.innerHTML = bloodGroups.map(group => {
+                const units = data[group] || 0;
+                const statusClass = units > 10 ? 'success' : units > 5 ? 'warning' : 'danger';
+                const statusText = units > 10 ? 'Good' : units > 5 ? 'Low' : 'Critical';
+                
+                return `
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <div class="blood-group-badge bg-${group.replace('+', 'p').replace('-', 'n')} mb-3">${group}</div>
+                                <h3 class="text-${statusClass}">${units}</h3>
+                                <p class="text-muted mb-1">Units Available</p>
+                                <span class="badge bg-${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        })
+        .catch(error => {
+            console.error('Error loading blood overview:', error);
+            document.getElementById('bloodOverview').innerHTML = 
+                '<div class="col-12 text-center text-muted">Unable to load blood availability</div>';
+        });
+}
+
+function clearSearch() {
+    document.getElementById('blood_group').value = '';
+    document.getElementById('location').value = '';
+    document.getElementById('urgency').value = '';
+    window.location.href = '{{ url_for("search_blood") }}';
+}
+
+function viewDetails(bloodId) {
+    const modal = new bootstrap.Modal(document.getElementById('bloodDetailsModal'));
+    const body = document.getElementById('detailsBody');
+    body.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+    modal.show();
+
+    fetch(`/blood-stock/${bloodId}/details`)
+        .then(r => r.json())
+        .then(d => {
+            const donorHtml = d.donor ? `
+                <tr><th>Donor</th><td>${d.donor.name} (ID: ${d.donor.id})</td></tr>
+                <tr><th>Donor Group</th><td>${d.donor.blood_group || ''}</td></tr>
+            ` : '';
+            body.innerHTML = `
+                <table class="table table-sm">
+                    <tbody>
+                        <tr><th>ID</th><td>${d.id}</td></tr>
+                        <tr><th>Blood Group</th><td>${d.blood_group}</td></tr>
+                        <tr><th>Units</th><td>${d.units_available}</td></tr>
+                        <tr><th>Status</th><td>${d.status}</td></tr>
+                        <tr><th>Collection Date</th><td>${d.collection_date || 'N/A'}</td></tr>
+                        <tr><th>Expiry Date</th><td>${d.expiry_date || 'N/A'}</td></tr>
+                        <tr><th>Days to Expiry</th><td>${d.days_to_expiry ?? 'N/A'}</td></tr>
+                        ${donorHtml}
+                    </tbody>
+                </table>
+            `;
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="text-danger">Failed to load details.</div>';
+        });
+}
+
+function requestSpecificBlood(bloodGroup, unitsAvailable) {
+    const url = new URL('{{ url_for("request_blood") }}', window.location.origin);
+    url.searchParams.set('blood_group', bloodGroup);
+    url.searchParams.set('units_needed', '1');
+    window.location.href = url.toString();
+}
+
+function requestBlood() {
+    window.location.href = '{{ url_for("request_blood") }}';
+}
+
+function buildExportUrl() {
+    const url = new URL('{{ url_for("export_search_blood_csv") }}', window.location.origin);
+    const bg = document.getElementById('blood_group').value;
+    const loc = document.getElementById('location').value;
+    if (bg) url.searchParams.set('blood_group', bg);
+    if (loc) url.searchParams.set('location', loc);
+    return url.toString();
+}
+
+document.getElementById('exportBtn').addEventListener('click', function() {
+    window.location.href = buildExportUrl();
+});
+
+document.getElementById('blood_group').addEventListener('change', function() {
+    if (this.value) {
+        this.form.submit();
+    }
+});
+
+document.getElementById('location').addEventListener('input', function() {
+    const query = this.value;
+    if (query.length > 2) {
+        console.log('Searching for locations:', query);
+    }
+});
+</script>
+{% endblock %}
+
+

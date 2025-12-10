@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appointments - Blood Bank Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Manage Appointments</h2>
+        </div>
+    </div>
+
+    <!-- Appointment Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ appointments|selectattr('status', 'equalto', 'scheduled')|list|length }}</h3>
+                        <p>Scheduled</p>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ appointments|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                        <p>Completed</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ appointments|selectattr('status', 'equalto', 'cancelled')|list|length }}</h3>
+                        <p>Cancelled</p>
+                    </div>
+                    <i class="fas fa-times-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ appointments|length }}</h3>
+                        <p>Total Appointments</p>
+                    </div>
+                    <i class="fas fa-list fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-calendar-check me-2"></i>All Appointments</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterAppointments('all')">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="filterAppointments('scheduled')">Scheduled</button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="filterAppointments('completed')">Completed</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="filterAppointments('cancelled')">Cancelled</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover" id="appointmentsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Donor</th>
+                                <th>Blood Group</th>
+                                <th>Appointment Date</th>
+                                <th>Status</th>
+                                <th>Notes</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr data-status="{{ appointment.status }}">
+                                <td>#{{ appointment.id }}</td>
+                                <td>
+                                    {% set donor = appointment.donor %}
+                                    <div>
+                                        <strong>{{ donor.full_name or donor.username if donor else 'Unknown' }}</strong>
+                                        {% if donor %}
+                                        <br><small class="text-muted">{{ donor.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if appointment.donor and appointment.donor.blood_group %}
+                                    <span class="blood-group-badge bg-{{ appointment.donor.blood_group.replace('+', 'p').replace('-', 'n') }}">
+                                        {{ appointment.donor.blood_group }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ appointment.appointment_date.strftime('%Y-%m-%d') }}</strong>
+                                        <br><small class="text-muted">{{ appointment.appointment_date.strftime('%I:%M %p') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ appointment.status }}">
+                                        {{ appointment.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if appointment.notes %}
+                                    <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ appointment.notes }}">
+                                        {{ appointment.notes }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">No notes</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ appointment.created_at.strftime('%Y-%m-%d') }}</small>
+                                </td>
+                                <td>
+                                    {% if appointment.status == 'scheduled' %}
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-success" onclick="completeAppointment({{ appointment.id }})" title="Mark as Complete">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger" onclick="cancelAppointment({{ appointment.id }})" title="Cancel">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    {% elif appointment.status == 'completed' %}
+                                    <span class="text-success"><i class="fas fa-check-circle"></i> Completed</span>
+                                    {% elif appointment.status == 'cancelled' %}
+                                    <span class="text-danger"><i class="fas fa-times-circle"></i> Cancelled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if not appointments %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                    <h5>No appointments found</h5>
+                    <p>No donation appointments have been scheduled yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterAppointments(status) {
+    const rows = document.querySelectorAll('#appointmentsTable tbody tr');
+    
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update button states
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function completeAppointment(appointmentId) {
+    if (!confirm('Mark this appointment as completed?')) return;
+    
+    fetch(`/admin/appointments/${appointmentId}/complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to complete appointment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to complete appointment');
+    });
+}
+
+function cancelAppointment(appointmentId) {
+    if (!confirm('Cancel this appointment?')) return;
+    
+    fetch(`/admin/appointments/${appointmentId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to cancel appointment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to cancel appointment');
+    });
+}
+
+// Initialize with 'all' filter active
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.btn-group button').classList.add('active');
+});
+</script>
+{% endblock %}

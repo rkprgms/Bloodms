@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-file-alt me-2"></i>Reports</h2>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_donors }}</h3>
+                        <p>Total Donors</p>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_recipients }}</h3>
+                        <p>Total Recipients</p>
+                    </div>
+                    <i class="fas fa-user-injured fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.total_blood_units }}</h3>
+                        <p>Blood Units Available</p>
+                    </div>
+                    <i class="fas fa-tint fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>{{ stats.pending_requests }}</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-download me-2"></i>Export CSV</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4 col-sm-6">
+                            <a class="btn btn-outline-primary w-100" href="{{ url_for('export_donors_csv') }}">
+                                <i class="fas fa-users me-2"></i>Donors CSV
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <a class="btn btn-outline-success w-100" href="{{ url_for('export_blood_stock_csv') }}">
+                                <i class="fas fa-tint me-2"></i>Blood Stock CSV
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <a class="btn btn-outline-warning w-100" href="{{ url_for('export_requests_csv') }}">
+                                <i class="fas fa-list me-2"></i>Requests CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
